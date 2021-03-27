@@ -26,7 +26,7 @@ export async function checkout(store: Store, givenUrl: string) {
   puppeteer
   .use(StealthPlugin())
   .launch({ 
-    headless: false,
+    headless: process.env.HEADLESS == 'true' ? true : false,
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
