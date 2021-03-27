@@ -24,6 +24,7 @@ import open from 'open';
 import {processBackoffDelay} from './model/helpers/backoff';
 import {sendNotification} from '../notification';
 import useProxy from '@doridian/puppeteer-page-proxy';
+import {checkout} from './checkout'
 
 const inStock: Record<string, boolean> = {};
 
@@ -312,6 +313,8 @@ async function lookupCard(
     const givenUrl =
       link.cartUrl && config.store.autoAddToCart ? link.cartUrl : link.url;
     logger.info(`${Print.inStock(link, store, true)}\n${givenUrl}`);
+
+    checkout(store, givenUrl)
 
     if (config.browser.open) {
       await (link.openCartAction === undefined

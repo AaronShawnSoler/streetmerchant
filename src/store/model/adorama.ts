@@ -119,12 +119,6 @@ export const Adorama: Store = {
       series: '3090',
       url: 'https://www.adorama.com/ast3090o24g.html',
     },
-    {
-      brand: 'asus',
-      model: 'strix oc',
-      series: '3090',
-      url: 'https://www.adorama.com/asrx3090o24g.html',
-    },
   ],
   name: 'adorama',
 };
