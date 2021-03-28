@@ -117,7 +117,7 @@ export const Adorama: Store = {
       brand: 'asus',
       model: 'tuf oc',
       series: '3090',
-      url: 'https://www.adorama.com/ast3090o24g.html',
+      url: 'https://www.adorama.com/isoa7cb.html',
     },
   ],
   name: 'adorama',

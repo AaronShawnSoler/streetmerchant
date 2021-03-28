@@ -1,3 +1,4 @@
+import { KeyInput } from 'puppeteer'
 import puppeteer from 'puppeteer-extra'
 import StealthPlugin from 'puppeteer-extra-plugin-stealth'
 import { Store } from './model'
@@ -11,14 +12,8 @@ const login = {
     email: <string>process.env.ADORAMA_EMAIL,
     password: <string>process.env.ADORAMA_PASSWORD
   },
-  gamestop: {
-    email: '',
-    password: '',
-    cvv: ''
-  },
   newegg: {
-    email: '',
-    password: ''
+    cvv: <string>process.env.NEWEGG_CVV
   }
 }
 
@@ -27,6 +22,8 @@ export async function checkout(store: Store, givenUrl: string) {
   .use(StealthPlugin())
   .launch({ 
     headless: process.env.HEADLESS == 'true' ? true : false,
+    executablePath: 'C:\\Program Files (x86)\\BraveSoftware\\Brave-Browser\\Application\\brave.exe',
+    userDataDir: './cookies',
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
@@ -35,8 +32,9 @@ export async function checkout(store: Store, givenUrl: string) {
     ]
   })
   .then(async browser => {
-    const page = await browser.newPage()
-    await page.goto(givenUrl, {waitUntil: 'networkidle0'})
+    const pages = await browser.pages()
+    const page = await pages[0]
+    await page.goto(givenUrl, {waitUntil: 'networkidle2'})
     
     try {
       
@@ -52,50 +50,35 @@ export async function checkout(store: Store, givenUrl: string) {
         await page.waitForSelector('a[data-action=placeOrder]')
         await page.click('a[data-action=placeOrder]')
       } else if (store.name == 'amazon') {
-        await page.waitForSelector('input[name=add]')
-        await page.click('input[name=add]')
-        await page.waitForSelector('input[name=proceedToRetailCheckout]')
-        await page.click('input[name=proceedToRetailCheckout]')
-        await page.waitForSelector('#ap_email')
-        await page.type('#ap_email', login.amazon.email)
-        await page.click('#continue')
-        await page.waitForSelector('#ap_password')
-        await page.type('#ap_password', login.amazon.password)
-        await page.click('#signInSubmit')
-        await page.waitForSelector('.a-button-text.place-your-order-button')
-        await page.click('.a-button-text.place-your-order-button')
-      } else if (store.name == 'gamestop') {
-        await page.waitForSelector('.primary-details-row .add-to-cart')
-        await page.click('.primary-details-row .add-to-cart')
-        await page.waitForTimeout(1000)
-        await page.waitForSelector('.modal-content a[title="View Cart"]')
-        await page.click('.modal-content a[title="View Cart"]')
-        const checkout = await Promise.race([
-          page.waitForSelector('a[class="mb-2 mx-0 btn btn-primary btn-block checkout-btn "]', {timeout: 2000, visible: true}),
-          page.waitForSelector('a[class="mb-2 mx-0 btn btn-primary btn-block checkout-btn-header "]', {timeout: 2000, visible: true}),
-        ])
-        await checkout?.click()
-        await page.waitForSelector('#login-form-email')
-        await page.type('#login-form-email', login.gamestop.email)
-        await page.type('#login-form-password', login.gamestop.password)
-        await page.click('#signinCheck button[type=submit]')
-        await page.waitForSelector('.row.no-gutters.next-step-button.justify-content-center.workflow-button .btn.btn-primary.btn-block.submit-shipping')
-        await page.click('.row.no-gutters.next-step-button.justify-content-center.workflow-button .btn.btn-primary.btn-block.submit-shipping')
-        await page.waitForNavigation()
-        await page.waitForSelector('label[for="saved-payment-security-code"]')
-        await page.click('label[for="saved-payment-security-code"]')
-        // await page.keyboard.type(login.gamestop.cvv, {delay: 100})
-        
-        // await page.click('.row.no-gutters.order-summary.justify-content-end button[value=submit-payment]')
-        // await page.waitForSelector('.row.no-gutters.order-summary.justify-content-end button[value="place-order"]')
-        // await page.click('.row.no-gutters.order-summary.justify-content-end button[value="place-order"]')
+        await page.waitForSelector('input[name="add"]')
+        await page.click('input[name="add"]')
+        await page.waitForSelector('input[name="proceedToRetailCheckout"]')
+        await page.click('input[name="proceedToRetailCheckout"]')
+        await page.waitForSelector('input[name="placeYourOrder1"]')
+        // await page.click('input[name="placeYourOrder1"]')
       } else if(store.name == 'newegg') {
-
+        await page.waitForSelector('.form-cell button[data-dismiss="modal"]')
+        await page.click('.form-cell button[data-dismiss="modal"]')
+        await page.waitForSelector('input[title="Search Site"]')
+        await page.click('input[title="Search Site"]')
+        await page.click('button[class="btn btn-primary btn-wide"]')
+        await page.waitForSelector('div[class="checkout-step-done"] input[class="form-text mask-cvv-4"]')
+        await page.focus('div[class="checkout-step-done"] input[class="form-text mask-cvv-4"]')
+        await page.waitForTimeout(500)
+        await page.keyboard.press(<KeyInput>login.newegg.cvv[0])
+        await page.keyboard.press('ArrowLeft')
+        await page.keyboard.press('ArrowLeft')
+        await page.keyboard.press('ArrowLeft')
+        await page.keyboard.press(<KeyInput>login.newegg.cvv[1])
+        await page.keyboard.press('ArrowLeft')
+        await page.keyboard.press(<KeyInput>login.newegg.cvv[2])
+        // await page.click('button#btnCreditCard')
       }
 
       await page.waitForTimeout(5000)
       await page.screenshot({ path: `screenshots/${store.name}-${Date.now()}.png`, fullPage: true })
-      await browser.close()
+      await page.close()
+      // await browser.close()
     } catch (err) {
       console.log(err)
       await page.waitForTimeout(5000)

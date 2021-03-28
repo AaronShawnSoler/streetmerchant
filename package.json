@@ -4,6 +4,7 @@
   "description": "The world's easiest, most powerful stock checker",
   "main": "src/index.ts",
   "scripts": {
+    "login": "npx ts-node login.ts",
     "fix": "gts fix",
     "lint": "gts lint",
     "clean": "gts clean",
